@@ -1,7 +1,8 @@
-﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -41,7 +42,8 @@ namespace osu.Android
     [IntentFilter(new[] { Intent.ActionView }, Categories = new[] { Intent.CategoryBrowsable, Intent.CategoryDefault }, DataSchemes = new[] { "osu", "osump" })]
     public class OsuGameActivity : AndroidGameActivity
     {
-        private static readonly string[] osu_url_schemes = { "osu", "osump" };
+        // HashSet for O(1) lookup instead of O(n) array scan
+        private static readonly HashSet<string> osu_url_schemes = new HashSet<string> { "osu", "osump" };
 
         /// <summary>
         /// The default screen orientation.
@@ -150,24 +152,21 @@ namespace osu.Android
             }
         }
 
-        private void handleImportFromUris(params Uri[] uris) => Task.Factory.StartNew(async () =>
+        // Task.Run correctly unwraps async lambdas (unlike Task.Factory.StartNew which returns Task<Task>).
+        // ConcurrentBag eliminates the manual lock during parallel URI resolution.
+        private void handleImportFromUris(params Uri[] uris) => Task.Run(async () =>
         {
-            var tasks = new List<ImportTask>();
+            var tasks = new ConcurrentBag<ImportTask>();
 
             await Task.WhenAll(uris.Select(async uri =>
             {
                 var task = await AndroidImportTask.Create(ContentResolver!, uri).ConfigureAwait(false);
 
                 if (task != null)
-                {
-                    lock (tasks)
-                    {
-                        tasks.Add(task);
-                    }
-                }
+                    tasks.Add(task);
             })).ConfigureAwait(false);
 
             await game.Import(tasks.ToArray()).ConfigureAwait(false);
-        }, TaskCreationOptions.LongRunning);
+        });
     }
 }

@@ -29,7 +29,11 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install Android workload
-        run: dotnet workload install android
+        run: dotnet workload install android --skip-sign-check
+
+      - name: Restore workloads
+        working-directory: osu
+        run: dotnet workload restore osu.Android/osu.Android.csproj
 
       - name: Restore dependencies
         working-directory: osu

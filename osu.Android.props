@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
     <RuntimeIdentifiers>android-x86;android-arm;android-arm64</RuntimeIdentifiers>
@@ -10,7 +10,8 @@
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ppy.osu.Framework.Android" Version="2026.318.0" />
+    <!-- Replaced ppy.osu.Framework.Android NuGet with local fork reference (incRxYT/osu-framework) for 90fps changes -->
+    <ProjectReference Include="..\osu-framework-master\osu.Framework.Android\osu.Framework.Android.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <!-- Fody does not handle Android build well, and warns when unchanged.

@@ -1,0 +1,81 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout incRxYT/osu
+        uses: actions/checkout@v4
+        with:
+          repository: incRxYT/osu
+          path: osu
+
+      - name: Checkout incRxYT/osu-framework
+        uses: actions/checkout@v4
+        with:
+          repository: incRxYT/osu-framework
+          path: osu-framework-master
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Restore dependencies
+        working-directory: osu
+        run: dotnet restore osu.Android/osu.Android.csproj
+
+      - name: Build APK
+        working-directory: osu
+        run: >
+          dotnet publish osu.Android/osu.Android.csproj
+          -c Release
+          -f net8.0-android
+          -p:AndroidSupportedAbis=arm64-v8a
+          -p:RunAOTCompilation=true
+          -p:EnableLLVM=true
+          -p:AndroidEnableProfiledAot=true
+          -p:PublishTrimmed=true
+          -p:TrimMode=partial
+          -p:ApplicationId=sh.ppy.osulazer
+          --no-restore
+          -o ./output
+
+      - name: Find APK
+        id: find_apk
+        run: echo "apk=$(find osu/output -name '*.apk' | head -1)" >> $GITHUB_OUTPUT
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: osu-android-arm64
+          path: ${{ steps.find_apk.outputs.apk }}
+          retention-days: 7
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Android Build #${{ github.run_number }}"
+          body: |
+            Automated Android build from commit ${{ github.sha }}
+
+            **Device target:** Samsung Galaxy Tab A9+ (ARM64)
+            **Changes:** 90fps refresh rate optimizations
+
+            ### Install
+            1. Download the APK below
+            2. On your tablet: Settings → Apps → Special app access → Install unknown apps
+            3. Allow your browser, then open the APK
+          files: ${{ steps.find_apk.outputs.apk }}
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,25 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="sh.ppy.osulazer" android:installLocation="auto">
-	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
-	<application android:allowBackup="true"
-				 android:supportsRtl="true"
-				 android:label="osu!"
-				 android:icon="@mipmap/ic_launcher"
-				 android:roundIcon="@mipmap/ic_launcher">
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
+
+    <!-- Request high refresh rate support (90/120fps on supported devices) -->
+    <uses-feature android:name="android.hardware.type.pc" android:required="false" />
+
+    <application android:allowBackup="true"
+                 android:supportsRtl="true"
+                 android:label="osu!"
+                 android:icon="@mipmap/ic_launcher"
+                 android:roundIcon="@mipmap/ic_launcher"
+                 android:hardwareAccelerated="true"
+                 android:largeHeap="true"
+                 android:enableOnBackInvokedCallback="false">
+
+        <!-- Tell the OS this is a game — enables Game Mode optimizations on Android 12+ -->
+        <meta-data android:name="android.game_mode" android:value="true" />
+
+        <!-- Hint to AGDL/vendor drivers that this app wants high performance mode -->
+        <meta-data android:name="com.samsung.android.game.mode" android:value="1" />
+
         <provider android:name="androidx.core.content.FileProvider"
                   android:authorities="sh.ppy.osulazer.fileprovider"
                   android:grantUriPermissions="true"

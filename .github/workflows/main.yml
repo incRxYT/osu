@@ -11,17 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout incRxYT/osu
-        uses: actions/checkout@v4
-        with:
-          repository: incRxYT/osu
-          path: osu
-
       - name: Checkout incRxYT/osu-framework
         uses: actions/checkout@v4
         with:
           repository: incRxYT/osu-framework
           path: osu-framework-master
+
+      - name: Checkout incRxYT/osu
+        uses: actions/checkout@v4
+        with:
+          repository: incRxYT/osu
+          path: osu-master
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
@@ -32,15 +32,15 @@ jobs:
         run: dotnet workload install android --skip-sign-check
 
       - name: Restore workloads
-        working-directory: osu
+        working-directory: osu-master
         run: dotnet workload restore osu.Android/osu.Android.csproj
 
       - name: Restore dependencies
-        working-directory: osu
+        working-directory: osu-master
         run: dotnet restore osu.Android/osu.Android.csproj
 
       - name: Build APK
-        working-directory: osu
+        working-directory: osu-master
         run: >
           dotnet publish osu.Android/osu.Android.csproj
           -c Release
@@ -57,7 +57,7 @@ jobs:
 
       - name: Find APK
         id: find_apk
-        run: echo "apk=$(find osu/output -name '*.apk' | head -1)" >> $GITHUB_OUTPUT
+        run: echo "apk=$(find osu-master/output -name '*.apk' | head -1)" >> $GITHUB_OUTPUT
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4

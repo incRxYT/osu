@@ -13,7 +13,6 @@ namespace osu.Android
     public class AndroidImportTask : ImportTask
     {
         private readonly ContentResolver contentResolver;
-
         private readonly Uri uri;
 
         private AndroidImportTask(Stream stream, string filename, ContentResolver contentResolver, Uri uri)
@@ -30,24 +29,27 @@ namespace osu.Android
 
         public static async Task<AndroidImportTask?> Create(ContentResolver contentResolver, Uri uri)
         {
-            // there are more performant overloads of this method, but this one is the most backwards-compatible
-            // (dates back to API 1).
+            string filename;
+            long? fileSize = null;
 
-            var cursor = contentResolver.Query(uri, null, null, null, null);
+            // Only request the two columns we actually need — avoids fetching all columns.
+            // Cursor is disposed immediately after reading to release native resources.
+            using (var cursor = contentResolver.Query(uri, new[] { IOpenableColumns.DisplayName, IOpenableColumns.Size }, null, null, null))
+            {
+                if (cursor == null || !cursor.MoveToFirst())
+                    return null;
 
-            if (cursor == null)
-                return null;
+                filename = cursor.GetString(cursor.GetColumnIndex(IOpenableColumns.DisplayName))
+                           ?? uri.Path ?? string.Empty;
 
-            if (!cursor.MoveToFirst())
-                return null;
+                int sizeColumn = cursor.GetColumnIndex(IOpenableColumns.Size);
+                if (!cursor.IsNull(sizeColumn))
+                    fileSize = cursor.GetLong(sizeColumn);
+            }
 
-            int filenameColumn = cursor.GetColumnIndex(IOpenableColumns.DisplayName);
-            string filename = cursor.GetString(filenameColumn) ?? uri.Path ?? string.Empty;
-
-            // SharpCompress requires archive streams to be seekable, which the stream opened by
-            // OpenInputStream() seems to not necessarily be.
-            // copy to an arbitrary-access memory stream to be able to proceed with the import.
-            var copy = new MemoryStream();
+            // Pre-size the MemoryStream if we know the file size — avoids repeated
+            // internal buffer reallocations during CopyToAsync for large beatmap files.
+            var copy = fileSize.HasValue ? new MemoryStream((int)fileSize.Value) : new MemoryStream();
 
             using (var stream = contentResolver.OpenInputStream(uri))
             {

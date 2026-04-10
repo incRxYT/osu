@@ -1,6 +1,5 @@
-﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
-
 using System;
 using System.Linq;
 using Android.App;
@@ -25,6 +24,11 @@ namespace osu.Android
 
         private readonly PackageInfo packageInfo;
 
+        // Cached to avoid recomputing on every access
+        private string? cachedVersion;
+        private Version? cachedAssemblyVersion;
+        private MobileUtils.Orientation lastOrientation;
+
         public override Vector2 ScalingContainerTargetDrawSize => new Vector2(1024, 1024 * DrawHeight / DrawWidth);
 
         public OsuGameAndroid(OsuGameActivity activity)
@@ -41,11 +45,12 @@ namespace osu.Android
                 if (!IsDeployedBuild)
                     return @"local " + (DebugUtils.IsDebugBuild ? @"debug" : @"release");
 
-                return packageInfo.VersionName.AsNonNull();
+                return cachedVersion ??= packageInfo.VersionName.AsNonNull();
             }
         }
 
-        public override Version AssemblyVersion => new Version(packageInfo.VersionName.AsNonNull().Split('-').First());
+        public override Version AssemblyVersion =>
+            cachedAssemblyVersion ??= new Version(packageInfo.VersionName.AsNonNull().Split('-').First());
 
         protected override void LoadComplete()
         {
@@ -56,7 +61,6 @@ namespace osu.Android
         protected override void ScreenChanged(IOsuScreen? current, IOsuScreen? newScreen)
         {
             base.ScreenChanged(current, newScreen);
-
             if (newScreen != null)
                 updateOrientation();
         }
@@ -64,6 +68,10 @@ namespace osu.Android
         private void updateOrientation()
         {
             var orientation = MobileUtils.GetOrientation(this, (IOsuScreen)ScreenStack.CurrentScreen, gameActivity.IsTablet);
+
+            // Skip redundant Android binder calls if orientation hasn't changed
+            if (orientation == lastOrientation) return;
+            lastOrientation = orientation;
 
             switch (orientation)
             {
@@ -94,7 +102,6 @@ namespace osu.Android
         private class AndroidBatteryInfo : BatteryInfo
         {
             public override double? ChargeLevel => Battery.ChargeLevel;
-
             public override bool OnBattery => Battery.PowerSource == BatteryPowerSource.Battery;
         }
     }

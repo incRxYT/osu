@@ -40,7 +40,7 @@
     </PackageReference>
     <PackageReference Include="Realm" Version="20.1.0" />
     <!-- Replaced ppy.osu.Framework NuGet with local fork reference (incRxYT/osu-framework) for 90fps changes -->
-    <ProjectReference Include="..\..\osu-framework-master\osu.Framework\osu.Framework.csproj" />
+    <ProjectReference Include="../../osu-framework-master/osu.Framework/osu.Framework.csproj" />
     <PackageReference Include="ppy.osu.Game.Resources" Version="2026.404.0" />
     <PackageReference Include="Sentry" Version="6.2.0" />
     <!-- Held back due to 0.34.0 failing AOT compilation on ZstdSharp.dll dependency. -->

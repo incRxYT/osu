@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\osu.Android.props" />
   <PropertyGroup>
     <TargetFramework>net8.0-android</TargetFramework>
@@ -8,7 +8,27 @@
     <Version>0.0.0</Version>
     <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1</ApplicationVersion>
     <ApplicationDisplayVersion Condition=" '$(ApplicationDisplayVersion)' == '' ">$(Version)</ApplicationDisplayVersion>
+
+    <!-- AOT: compiles IL to native ARM code at build time, eliminates JIT stutter mid-game -->
+    <RunAOTCompilation>true</RunAOTCompilation>
+
+    <!-- Trim unused code to reduce APK size and improve cold start time -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+
+    <!-- Strip debug info from release builds -->
+    <DebugType Condition=" '$(Configuration)' == 'Release' ">none</DebugType>
+
+    <!-- Use LLVM backend for AOT — better optimized native code, slower build but faster runtime -->
+    <EnableLLVM Condition=" '$(Configuration)' == 'Release' ">true</EnableLLVM>
+
+    <!-- Target only ARM64 in release — dropping x86/x86_64 cuts APK size and build time -->
+    <AndroidSupportedAbis Condition=" '$(Configuration)' == 'Release' ">arm64-v8a</AndroidSupportedAbis>
+
+    <!-- Faster GC for games — uses concurrent GC to reduce pause spikes -->
+    <AndroidEnableProfiledAot Condition=" '$(Configuration)' == 'Release' ">true</AndroidEnableProfiledAot>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\osu.Game.Rulesets.Catch\osu.Game.Rulesets.Catch.csproj" />
     <ProjectReference Include="..\osu.Game.Rulesets.Mania\osu.Game.Rulesets.Mania.csproj" />
@@ -16,6 +36,7 @@
     <ProjectReference Include="..\osu.Game.Rulesets.Taiko\osu.Game.Rulesets.Taiko.csproj" />
     <ProjectReference Include="..\osu.Game\osu.Game.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.3" />
   </ItemGroup>

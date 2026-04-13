@@ -23,6 +23,19 @@ jobs:
           repository: incRxYT/osu
           path: osu-master
 
+      - name: Debug directory structure
+        run: |
+          echo "=== Workspace root ==="
+          ls $GITHUB_WORKSPACE
+          echo "=== osu-framework-master root ==="
+          ls $GITHUB_WORKSPACE/osu-framework-master
+          echo "=== osu.Framework.Android folder ==="
+          ls $GITHUB_WORKSPACE/osu-framework-master/osu.Framework.Android
+          echo "=== osu-master root ==="
+          ls $GITHUB_WORKSPACE/osu-master
+          echo "=== osu.Android.props content ==="
+          cat $GITHUB_WORKSPACE/osu-master/osu.Android.props
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -45,7 +58,7 @@ jobs:
           dotnet publish osu.Android/osu.Android.csproj
           -c Release
           -f net8.0-android
-          -p:AndroidSupportedAbis=arm64-v8a
+          -p:RuntimeIdentifiers=android-arm64
           -p:RunAOTCompilation=true
           -p:EnableLLVM=true
           -p:AndroidEnableProfiledAot=true

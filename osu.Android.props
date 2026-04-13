@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Replaced ppy.osu.Framework.Android NuGet with local fork reference (incRxYT/osu-framework) for 90fps changes -->
-    <ProjectReference Include="../osu-framework-master/osu.Framework.Android/osu.Framework.Android.csproj" />
+    <ProjectReference Include="../../osu-framework-master/osu.Framework.Android/osu.Framework.Android.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <!-- Fody does not handle Android build well, and warns when unchanged.
